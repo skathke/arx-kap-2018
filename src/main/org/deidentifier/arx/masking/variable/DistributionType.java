@@ -53,7 +53,7 @@ abstract public class DistributionType implements Serializable {
                                                                                  DistributionParameter<Integer> paramNumber = new DistributionParameter.IntegerParameter();
                                                                                  paramNumber.setName("number");
                                                                                  paramNumber.setMin(0);
-                                                                                 paramNumber.setMax(Integer.MAX_VALUE);
+                                                                                 paramNumber.setMax(10000000);
                                                                                  paramNumber.setInitial(10);
                                                                                  paramNumber.setDescription("Number of tries");
 
