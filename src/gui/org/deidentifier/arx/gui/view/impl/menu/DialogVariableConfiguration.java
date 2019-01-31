@@ -99,6 +99,9 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 
 	/** List keeping track of ModifyListeners that disabled the OK button */
 	private LinkedList<ModifyListener> okDisablers;
+	
+	/** Listener for the modification of the Variable name */
+	private ModifyListener nameListener;
 
 	/**
 	 * Constructor in case a new random variable is created
@@ -138,16 +141,8 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 	 */
 	@Override
 	public void create() {
-
-		super.create();
-
-		if (isNewVariable) {
-			setTitle(Resources.getMessage("DialogVariableConfiguration.0")); //$NON-NLS-1$ F
-		} else {
-			setTitle(Resources.getMessage("DialogVariableConfiguration.1")); //$NON-NLS-1$
-		}
-		setMessage(Resources.getMessage("DialogVariableConfiguration.2"), IMessageProvider.INFORMATION); //$NON-NLS-1$
-		textVariableName.addModifyListener(new ModifyListener() {
+		//Needs to be created before super.create is called
+		nameListener = new ModifyListener() {
 			// Get previous error message in order to prevent okay to be activated although
 			// there was a previous error message
 			@Override
@@ -164,7 +159,17 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 						setErrorMessage(null);
 				}
 			}
-		});
+		};
+		super.create();
+
+		if (isNewVariable) {
+			setTitle(Resources.getMessage("DialogVariableConfiguration.0")); //$NON-NLS-1$ F
+		} else {
+			setTitle(Resources.getMessage("DialogVariableConfiguration.1")); //$NON-NLS-1$
+		}
+		setMessage(Resources.getMessage("DialogVariableConfiguration.2"), IMessageProvider.INFORMATION); //$NON-NLS-1$
+
+		textVariableName.addModifyListener(nameListener);
 	}
 
 	/*
@@ -248,6 +253,7 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				updateParameters();
+				composite.layout(true); //Puts ButtonBar below parameters again if composite size increases
 			}
 
 		});
@@ -413,13 +419,30 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 	 */
 	private void updateParameters() {
 
+		
 		// Dispose all existing parameter widgets
 		for (Control children : compositeParameter.getChildren()) {
-			//Remove all children from okDisablers, check for TextVariableName again
-			okDisablers.clear();
-			if (textVariableName.getText().equals(""))
-				okDisablers.add((ModifyListener) children.getListeners(SWT.Modify)[0]);
 			children.dispose();
+		}
+		
+
+		//Remove all children from okDisablers, check for TextVariableName again
+		okDisablers.clear();
+		if (textVariableName.getText().equals(""))
+					okDisablers.add(nameListener);
+		
+		// Set variable type
+		switch (comboDistribution.getText()) {
+
+		// TODO: Export, so no hardcoded strings?
+		case "Binomial distribution (discrete)":
+			variable.setDistributionType(DistributionType.DISCRETE_BINOMIAL);
+			break;
+
+		case "Geometric distribution (discrete)":
+			variable.setDistributionType(DistributionType.DISCRETE_GEOMETRIC);
+			break;
+
 		}
 
 		// Iterate over parameters for selected distribution
@@ -434,9 +457,8 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 			}
 
 		}
-
 		// Update layout
-		compositeParameter.layout();
+		compositeParameter.layout(true);
 
 	}
 
