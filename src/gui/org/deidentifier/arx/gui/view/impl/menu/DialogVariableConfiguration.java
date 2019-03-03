@@ -17,6 +17,7 @@
 
 package org.deidentifier.arx.gui.view.impl.menu;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,6 +49,8 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import oracle.net.ano.SupervisorService;
@@ -102,22 +105,26 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 	
 	/** Listener for the modification of the Variable name */
 	private ModifyListener nameListener;
+	
+	private List<String> variableNames;
+	
 
 	/**
 	 * Constructor in case a new random variable is created
 	 * 
 	 * @param controller
+	 * @param tableItems 
 	 */
 	public DialogVariableConfiguration(Controller controller) {
-
 		this(controller, new RandomVariable(""));
+		
 		this.isNewVariable = true;
 		this.okDisablers = new LinkedList<ModifyListener>();
-
+		
 	}
 
 	/**
-	 * Constructor in case a new random variable is created
+	 * Constructor in case an existing random variable is changed
 	 * 
 	 * @param controller
 	 * @param variable
@@ -125,7 +132,12 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 	public DialogVariableConfiguration(Controller controller, RandomVariable variable) {
 
 		super(controller.getResources().getShell());
-
+		
+		List<RandomVariable> vars = controller.getModel().getMaskingModel().getRandomVariables();
+		variableNames = new ArrayList<String>();
+		for (RandomVariable v : vars) {
+			variableNames.add(v.getName());
+		}
 		initiliazeParameterLabelMap();
 
 		this.controller = controller;
@@ -133,6 +145,7 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 		this.okDisablers = new LinkedList<ModifyListener>();
 
 	}
+
 
 	/*
 	 * (non-Javadoc)
@@ -151,7 +164,11 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 					setErrorMessage(Resources.getMessage("DialogVariableConfiguration.5")); //$NON-NLS-1$
 					if (okDisablers.isEmpty() || okDisablers.getLast() != this)
 						okDisablers.add(this);
-				} else {
+				} else if(!(textVariableName.getText().equals(variable.getName())) && variableNames.contains(textVariableName.getText())){
+					setErrorMessage(Resources.getMessage("DialogVariableConfiguration.5")); //$NON-NLS-1$
+					if (okDisablers.isEmpty() || okDisablers.getLast() != this)
+						okDisablers.add(this);
+				} else{
 					okDisablers.removeLastOccurrence(this);
 					if (!okDisablers.isEmpty())
 						okDisablers.getLast().modifyText(null);
@@ -163,7 +180,7 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 		super.create();
 
 		if (isNewVariable) {
-			setTitle(Resources.getMessage("DialogVariableConfiguration.0")); //$NON-NLS-1$ F
+			setTitle(Resources.getMessage("DialogVariableConfiguration.0")); //$NON-NLS-1$
 		} else {
 			setTitle(Resources.getMessage("DialogVariableConfiguration.1")); //$NON-NLS-1$
 		}
@@ -419,6 +436,9 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 	 */
 	private void updateParameters() {
 
+		//Check whether name change
+		//TODO Make it effective, this is just a stub in order to check controller
+		//if controller
 		
 		// Dispose all existing parameter widgets
 		for (Control children : compositeParameter.getChildren()) {
@@ -426,7 +446,7 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 		}
 		
 
-		//Remove all children from okDisablers, check for TextVariableName again
+		//Remove all elements from okDisablers, check for TextVariableName and duplicate variable names again
 		okDisablers.clear();
 		if (textVariableName.getText().equals(""))
 					okDisablers.add(nameListener);
