@@ -303,7 +303,10 @@ public class DialogVariableConfiguration extends TitleAreaDialog implements IDia
 		// Create text
 		final ParameterText text = new ParameterText(parameter, compositeParameter, SWT.BORDER);
 		text.setLayoutData(SWTUtil.createFillHorizontallyGridData());
-		text.setText(String.valueOf(parameter.getInitial()));
+		if (isNewVariable)
+			text.setText(String.valueOf(parameter.getInitial()));
+		else
+			text.setText(String.valueOf(variable.getParameter(parameter.getName()).getValue()));
 		text.addModifyListener(new ModifyListener() {
 
 			@Override
