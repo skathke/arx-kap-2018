@@ -34,6 +34,8 @@ import org.deidentifier.arx.masking.MaskingType;
 import org.deidentifier.arx.masking.variable.RandomVariable;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
@@ -87,6 +89,9 @@ public class ViewMaskingConfiguration implements IView {
 
     /** Widget. */
     private final ComponentMultiStack  stack;
+    
+    /** TextField for Pseudonymization */
+    private final Text textField;
 
     /**
      * Creates an instance.
@@ -133,7 +138,8 @@ public class ViewMaskingConfiguration implements IView {
         cmbMasking = new Combo(innerGroup, SWT.READ_ONLY);
         cmbMasking.setLayoutData(SWTUtil.createFillGridData());
         cmbMasking.setItems(COMBO1_MASKINGTYPES);
-        cmbMasking.select(0);
+        
+        
         cmbMasking.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent arg0) {
@@ -146,6 +152,8 @@ public class ViewMaskingConfiguration implements IView {
                             actionMaskingTypeChanged(attribute, maskingType);
                             refreshLayers(cmbMasking.getSelectionIndex());
                             identified = true;
+                            cmbMasking.select(cmbMasking.getSelectionIndex());
+                            cmbMasking.setEnabled(true);
                             break;
                         }
 
@@ -185,9 +193,15 @@ public class ViewMaskingConfiguration implements IView {
         Composite compositetf = new Composite(second, SWT.NONE);
         compositetf.setLayout(typeInputGridLayout);
         final int maxLength = 20;
-        final Text textField = new Text(compositetf, SWT.SINGLE | SWT.BORDER);
-        textField.setText("15"); //$NON-NLS-1$
-        textField.setToolTipText("15"); //$NON-NLS-1$
+        textField = new Text(compositetf, SWT.SINGLE | SWT.BORDER);
+        if (MaskingConfiguration.getMaskingType(attribute) == MaskingType.PSEUDONYMIZATION_MASKING) {
+        	textField.setText(MaskingConfiguration.getMapping().get(attribute).getStringLength() + "");
+        	textField.setToolTipText(MaskingConfiguration.getMapping().get(attribute).getStringLength() + "");
+        }
+        else {
+        	textField.setText("15"); //$NON-NLS-1$
+            textField.setToolTipText("15"); //$NON-NLS-1$
+        }
         textField.setLayoutData(SWTUtil.createFillHorizontallyGridData());
         textField.setEditable(false);
         // Button for updating
@@ -264,9 +278,21 @@ public class ViewMaskingConfiguration implements IView {
                 cmbDistribution.select(0);
             }
         }
-
+        if (maskingType == MaskingType.PSEUDONYMIZATION_MASKING) {
+            if (MaskingConfiguration.getMaskingType(attribute) == MaskingType.PSEUDONYMIZATION_MASKING) {
+            	textField.setText(MaskingConfiguration.getMapping().get(attribute).getStringLength() + "");
+            	textField.setToolTipText(MaskingConfiguration.getMapping().get(attribute).getStringLength() + "");
+            }
+            else {
+            	textField.setText("15"); //$NON-NLS-1$
+                textField.setToolTipText("15"); //$NON-NLS-1$
+            }
+        }
+        		
         controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, null));
     }
+    
+    
 
     /*
      * (non-Javadoc)
@@ -321,6 +347,10 @@ public class ViewMaskingConfiguration implements IView {
             }
         } else if (event.part == ModelPart.ATTRIBUTE_TYPE) {
             updateMaskingType();
+            if (controller.getModel().getInputDefinition().getIdentifyingAttributes().size() == 0)
+            	cmbMasking.setEnabled(false);
+            else
+            	cmbMasking.setEnabled(true);
             // TODO disable/hide masking configuration when no attribute is selected in the
             // attribute configuration table (currently selected attribute is not identifying)
         } else if (event.part == ModelPart.MODEL) {

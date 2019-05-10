@@ -38,7 +38,9 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.window.Window;
@@ -153,7 +155,13 @@ public class ViewVariableConfiguration implements IView {
                 controller.getModel().getMaskingModel().removeRandomVariable((variable));
 
                 // update VariableConfiguration View List
-                controller.update(new ModelEvent(this, ModelPart.RANDOM_VARIABLE, (RandomVariable) ((IStructuredSelection) tableViewer.getSelection()).getFirstElement()));
+                if (controller.getModel().getMaskingModel().getRandomVariables().size() > 0) {
+                	controller.update(new ModelEvent(this, ModelPart.RANDOM_VARIABLE, (RandomVariable) ((IStructuredSelection) tableViewer.getSelection()).getFirstElement()));
+                } else {
+                    controller.update(new ModelEvent(this, ModelPart.RANDOM_VARIABLE, null));                	
+                }
+                
+
 
             }
 
@@ -211,8 +219,10 @@ public class ViewVariableConfiguration implements IView {
             @Override
             public void widgetSelected(SelectionEvent event) {
 
+            	
                 // Update button status
                 updateButtons();
+                controller.update(new ModelEvent(this, ModelPart.RANDOM_VARIABLE, (RandomVariable) ((IStructuredSelection) tableViewer.getSelection()).getFirstElement()));
 
             }
 

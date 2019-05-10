@@ -31,7 +31,7 @@ public class AttributeParameters {
     private int         selectedDistributionIndex = 0;
 
     /** String length */
-    private int         stringLength              = -1;
+    private int         stringLength              = 15;
 
     /**
      * Creates an instance.

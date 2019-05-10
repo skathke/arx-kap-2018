@@ -163,6 +163,7 @@ public class ViewVariableDistribution implements IView {
 
             // Update chart
             RandomVariable data = (RandomVariable) event.data;
+            if (data != null) {
             Distribution<Integer> result = data.getDistribution();
             ISeriesSet seriesSet = chart.getSeriesSet();
             ISeries series = seriesSet.createSeries(SeriesType.BAR, "values");
@@ -176,6 +177,13 @@ public class ViewVariableDistribution implements IView {
             chart.getAxisSet().getYAxis(0).getTitle().setText(Resources.getMessage("VariableDistributionView.0")); //$NON-NLS-1$
             chart.getAxisSet().getXAxis(0).getTitle().setText(Resources.getMessage("VariableDistributionView.1")); //$NON-NLS-1$
             chart.redraw();
+            }else {
+            	ISeriesSet seriesSet = chart.getSeriesSet();
+            	ISeries series = seriesSet.createSeries(SeriesType.BAR, "values");
+            	series.setVisible(false);
+            	chart.getTitle().setText("");
+            	chart.redraw();
+            }
 
         }
     }
