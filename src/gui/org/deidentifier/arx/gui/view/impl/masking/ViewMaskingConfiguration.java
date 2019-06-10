@@ -232,6 +232,7 @@ public class ViewMaskingConfiguration implements IView {
                                                                      }
                                                                  });
                 if (_value != null) {
+                	MaskingConfiguration.getMapping().get(attribute).setStringLength(Integer.parseInt(_value, 10)); 
                     textField.setText(_value);
                     textField.setToolTipText(_value);
                 }
@@ -347,10 +348,19 @@ public class ViewMaskingConfiguration implements IView {
             }
         } else if (event.part == ModelPart.ATTRIBUTE_TYPE) {
             updateMaskingType();
-            if (controller.getModel().getInputDefinition().getIdentifyingAttributes().size() == 0)
+            if (controller.getModel().getInputDefinition().getIdentifyingAttributes().size() == 0) {
             	cmbMasking.setEnabled(false);
+            	cmbMasking.select(0);
+            	stack.setLayer(0);
+            	actionMaskingTypeChanged(attribute, MaskingType.SUPPRESSED);
+            	}
             else
             	cmbMasking.setEnabled(true);
+            	if (!controller.getModel().getInputDefinition().getIdentifyingAttributes().contains("attribute")) {
+            		cmbMasking.select(0);
+                	stack.setLayer(0);
+                	actionMaskingTypeChanged(attribute, MaskingType.SUPPRESSED);
+            	}
             // TODO disable/hide masking configuration when no attribute is selected in the
             // attribute configuration table (currently selected attribute is not identifying)
         } else if (event.part == ModelPart.MODEL) {
@@ -378,6 +388,10 @@ public class ViewMaskingConfiguration implements IView {
             return;
         }
         MaskingType maskingType = MaskingConfiguration.getMaskingType(attribute);
+        if (maskingType == MaskingType.PSEUDONYMIZATION_MASKING) { //Set String length for  pseudonymization masking
+        	textField.setText(MaskingConfiguration.getMapping().get(attribute).getStringLength() + "");
+        	textField.setToolTipText(MaskingConfiguration.getMapping().get(attribute).getStringLength() + "");
+        }
         // sets the ComboBox to the appropriate Distribution, only if set to RandomGeneration or NoiseAddition
         if (maskingType == MaskingType.RANDOM_GENERATION_MASKING || maskingType == MaskingType.NOISE_ADDITION_MASKING) {
             int index = MaskingConfiguration.getDistributionIndex(attribute);
