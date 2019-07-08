@@ -44,6 +44,8 @@ import org.deidentifier.arx.masking.DataMaskingFunction;
 import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionRandomAlphanumericString;
 import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionNoiseAddition;
 import org.deidentifier.arx.masking.variable.RandomVariable;
+import org.deidentifier.arx.masking.DataMaskingFunction.PermutationFunctionColumns;
+import org.deidentifier.arx.masking.DataMaskingFunction.PermutationFunctionColumns.PermutationType;
 
 /**
  * Represents an attribute type.
@@ -896,6 +898,27 @@ public class AttributeType implements Serializable, Cloneable { // NO_UCD
         public static MaskingFunction applyNoise(boolean ignoreMissingData, RandomVariable r) {
         	return new MaskingFunction(new DataMaskingFunctionNoiseAddition(ignoreMissingData, r), DataScale.NOMINAL, "Noise Addition");
         }
+
+        /**
+         * Creates a masking function creating a random permutation on column's rows using Fisher-Yates Knuth-Yao (FYKY) algorithm
+         *
+         * @return
+         */
+        public static MaskingFunction createPermutationFunctionColumns() {
+        	return createPermutationFunctionColumns(true, PermutationType.FYKY);
+        }
+            /**
+             * Creates a masking function creating a random permutation on column's rows
+             * 
+             * @param ignoreMissingData Should the function ignore missing data. Default is true.
+             * @param typePermutation Type of permutation to apply on column's rows
+             * @return
+             */
+            public static MaskingFunction createPermutationFunctionColumns(boolean ignoreMissingData, PermutationType typePermutation) {
+        	    return new MaskingFunction(new PermutationFunctionColumns(ignoreMissingData, typePermutation),
+        			                       DataScale.NOMINAL, "Permutation Columns");
+            }
+    
         
         /** The actual masking function */
         private final DataMaskingFunction function;
@@ -1095,6 +1118,20 @@ public class AttributeType implements Serializable, Cloneable { // NO_UCD
                     @Override public MaskingFunction createInstance(boolean ignoreMissingData) {
                         return MaskingFunction.createRandomAlphanumericString(ignoreMissingData, 30);
                     }
+                },
+                new MaskingFunctionDescription(DataScale.NOMINAL, "random permutation on column's rows using FYKY algorithm") {
+
+					/** SVUID*/  private static final long serialVersionUID = -2760933491954477575L;
+					@Override public MaskingFunction createInstance(boolean ignoreMissingData) {
+						return MaskingFunction.createPermutationFunctionColumns(ignoreMissingData, PermutationType.FYKY);
+					}
+                },
+                new MaskingFunctionDescription(DataScale.NOMINAL, "random permutation on column's rows using RS algorithm") {
+                	
+					/** SVUID*/  private static final long serialVersionUID = -5012666134229682310L;
+					@Override public MaskingFunction createInstance(boolean ignoreMissingData) {
+						return MaskingFunction.createPermutationFunctionColumns(ignoreMissingData, PermutationType.RS);
+					}
                 }
         });
     }
