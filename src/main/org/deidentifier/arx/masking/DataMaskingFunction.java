@@ -22,6 +22,7 @@ import java.util.Random;
 
 import org.deidentifier.arx.DataType;
 import org.deidentifier.arx.framework.data.DataColumn;
+import org.deidentifier.arx.masking.variable.RandomVariable;
 
 /**
  * This class implements data masking functions
@@ -52,6 +53,158 @@ public abstract class DataMaskingFunction implements Serializable {
          * @param length 
          */
         public DataMaskingFunctionRandomAlphanumericString(boolean ignoreMissingData, int length) {
+            super(ignoreMissingData, false);
+            this.length = length;
+        }
+
+        @Override
+        public void apply(DataColumn column) {
+
+            // Prepare
+            Random random = new SecureRandom();
+            char[] buffer = new char[length];
+
+            // Mask
+            for (int row = 0; row < column.getNumRows(); row++) {
+                
+                // Leave null as is, if configured to not ignore missing data
+                if (super.isIgnoreMissingData() || !column.get(row).equals(DataType.NULL_VALUE)) {
+                    column.set(row, getRandomAlphanumericString(buffer, random));
+                }
+            }
+        }
+
+        @Override
+        public DataMaskingFunction clone() {
+            return new DataMaskingFunctionRandomAlphanumericString(super.isIgnoreMissingData(), length);
+        }
+
+        /**
+         * Creates a random string
+         * @param random 
+         * @param buffer 
+         * @return
+         */
+        private String getRandomAlphanumericString(char[] buffer, Random random) {
+            for (int i = 0; i < buffer.length; i++) {
+                buffer[i] = CHARACTERS[random.nextInt(CHARACTERS.length)];
+            }
+            return new String(buffer);
+        }
+    }
+    
+    /**
+     * Noise Addition
+     * @author Severin Kathke
+     *
+     */
+    public static class DataMaskingFunctionNoiseAddition extends DataMaskingFunction {
+
+        /** SVUID*/
+		private static final long serialVersionUID = -1095829583911933171L;
+
+        /** Variable */
+        private final RandomVariable var;
+        
+        /**
+         * Creates a new instance
+         * @param ignoreMissingData
+         * @param length 
+         */
+        public DataMaskingFunctionNoiseAddition(boolean ignoreMissingData, RandomVariable v) {
+            super(ignoreMissingData, false);
+            this.var = v;
+        }
+
+        @Override
+        public void apply(DataColumn column) {
+
+            // Prepare
+            Random random = new SecureRandom();
+
+            // Mask
+            for (int row = 0; row < column.getNumRows(); row++) {
+                
+                // Leave null as is, if configured to not ignore missing data
+                if (super.isIgnoreMissingData() || !column.get(row).equals(DataType.NULL_VALUE)) {
+                    //column.set(row, getRandomAlphanumericString(buffer, random));
+                }
+            }
+        }
+
+        @Override
+        public DataMaskingFunction clone() {
+            return new DataMaskingFunctionNoiseAddition(super.isIgnoreMissingData(), var);
+        }
+
+    }
+    
+    /**
+     * Random Shuffling
+     * @author Severin Kathke
+     *
+     */
+    public static class DataMaskingFunctionRandomShuffling extends DataMaskingFunction {
+    	
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -7351472924258618593L;
+		/**
+         * Creates a new instance
+         * @param ignoreMissingData
+         */
+        public DataMaskingFunctionRandomShuffling(boolean ignoreMissingData) {
+            super(ignoreMissingData, false);
+        }
+
+        @Override
+        public void apply(DataColumn column) {
+        	//
+            // Prepare
+            Random random = new SecureRandom();
+
+            // Mask
+            for (int row = 0; row < column.getNumRows(); row++) {
+                
+                // Leave null as is, if configured to not ignore missing data
+                if (super.isIgnoreMissingData() || !column.get(row).equals(DataType.NULL_VALUE)) {
+                    int swapColumn = random.nextInt(column.getNumRows());
+                    String swapColumnValue = column.get(swapColumn);
+                    column.set(swapColumn, column.get(row));
+                    column.set(row, swapColumnValue);
+                }
+            }
+        }
+
+        @Override
+        public DataMaskingFunction clone() {
+            return new DataMaskingFunctionRandomShuffling(super.isIgnoreMissingData());
+        }
+    }
+    
+    /**
+     * Generates a random alphanumeric string
+     * 
+     * @author Fabian Prasser
+     */
+    public static class DataMaskingFunctionTest extends DataMaskingFunction {
+        
+        /** SVUID */
+        private static final long   serialVersionUID = 918401877743413029L;
+
+        /** Characters */
+        private static final char[] CHARACTERS       = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
+
+        /** Length */
+        private final int           length;
+        
+        /**
+         * Creates a new instance
+         * @param ignoreMissingData
+         * @param length 
+         */
+        public DataMaskingFunctionTest(boolean ignoreMissingData, int length) {
             super(ignoreMissingData, false);
             this.length = length;
         }

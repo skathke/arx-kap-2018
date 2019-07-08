@@ -42,6 +42,8 @@ import org.deidentifier.arx.io.CSVSyntax;
 import org.deidentifier.arx.io.IOUtil;
 import org.deidentifier.arx.masking.DataMaskingFunction;
 import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionRandomAlphanumericString;
+import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionNoiseAddition;
+import org.deidentifier.arx.masking.variable.RandomVariable;
 
 /**
  * Represents an attribute type.
@@ -890,6 +892,10 @@ public class AttributeType implements Serializable, Cloneable { // NO_UCD
                 return new MaskingFunction(new DataMaskingFunctionRandomAlphanumericString(ignoreMissingData, length),
                                            DataScale.NOMINAL, "Random alphanumeric string");
             }
+            
+        public static MaskingFunction applyNoise(boolean ignoreMissingData, RandomVariable r) {
+        	return new MaskingFunction(new DataMaskingFunctionNoiseAddition(ignoreMissingData, r), DataScale.NOMINAL, "Noise Addition");
+        }
         
         /** The actual masking function */
         private final DataMaskingFunction function;
