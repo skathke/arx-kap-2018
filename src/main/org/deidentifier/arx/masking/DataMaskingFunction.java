@@ -95,7 +95,7 @@ public abstract class DataMaskingFunction implements Serializable {
     }
     
     /**
-     * Noise Addition
+     * Noise Addition for numerical values
      * @author Severin Kathke
      *
      */
@@ -106,6 +106,7 @@ public abstract class DataMaskingFunction implements Serializable {
 
         /** Variable */
         private final RandomVariable var;
+        Random r = new SecureRandom();
         
         /**
          * Creates a new instance
@@ -113,23 +114,29 @@ public abstract class DataMaskingFunction implements Serializable {
          * @param length 
          */
         public DataMaskingFunctionNoiseAddition(boolean ignoreMissingData, RandomVariable v) {
-            super(ignoreMissingData, false);
+            super(ignoreMissingData, true);
             this.var = v;
         }
 
         @Override
-        public void apply(DataColumn column) {
+        public void apply(DataColumn column) throws NumberFormatException {
 
-            // Prepare
-            Random random = new SecureRandom();
-
+            //Check for Non-numerical values
+            for (int row = 0; row < column.getNumRows(); row++) {
+            			if (!((column.get(row).equals(DataType.DECIMAL) || column.get(row).equals(DataType.INTEGER) && 
+            					!column.get(row).equals(DataType.NULL_VALUE))))
+            				throw new NumberFormatException();
+            }
+            
             // Mask
             for (int row = 0; row < column.getNumRows(); row++) {
-                
                 // Leave null as is, if configured to not ignore missing data
                 if (super.isIgnoreMissingData() || !column.get(row).equals(DataType.NULL_VALUE)) {
-                    //column.set(row, getRandomAlphanumericString(buffer, random));
-                }
+                		if  (column.get(row).equals(DataType.DECIMAL))
+                			column.set(row, Integer.toString(addNoiseInteger(column.get(row), var)));
+                		else
+                			column.set(row, Double.toString(addNoiseDouble(column.get(row), var)));
+                } 
             }
         }
 
@@ -137,6 +144,14 @@ public abstract class DataMaskingFunction implements Serializable {
         public DataMaskingFunction clone() {
             return new DataMaskingFunctionNoiseAddition(super.isIgnoreMissingData(), var);
         }
+        
+        public int addNoiseInteger(String input, RandomVariable variable) {
+        			return Integer.parseInt(input) + (int) variable.getDistribution().getSample();
+        }
+        
+        public double addNoiseDouble(String input, RandomVariable variable) {
+			return Double.parseDouble(input) + variable.getDistribution().getSample();
+}
 
     }
     
@@ -156,7 +171,7 @@ public abstract class DataMaskingFunction implements Serializable {
          * @param ignoreMissingData
          */
         public DataMaskingFunctionRandomShuffling(boolean ignoreMissingData) {
-            super(ignoreMissingData, false);
+            super(ignoreMissingData, true);
         }
 
         @Override
@@ -181,6 +196,47 @@ public abstract class DataMaskingFunction implements Serializable {
         @Override
         public DataMaskingFunction clone() {
             return new DataMaskingFunctionRandomShuffling(super.isIgnoreMissingData());
+        }
+    }
+    
+    /**
+     * Random Generation for Integers.
+     * @author Severin Kathke
+     *
+     */
+    public static class DataMaskingFunctionRandomGenerationNumeric extends DataMaskingFunction {
+    	
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -7351472924258618593L;
+		
+		private final RandomVariable var;
+		/**
+         * Creates a new instance
+         * @param ignoreMissingData
+         */
+        public DataMaskingFunctionRandomGenerationNumeric(boolean ignoreMissingData, RandomVariable var) {
+            super(ignoreMissingData, true);
+            this.var = var;
+        }
+
+        @Override
+        public void apply(DataColumn column) {
+
+            // Mask
+            for (int row = 0; row < column.getNumRows(); row++) {
+                
+                // Leave null as is, if configured to not ignore missing data
+                if (super.isIgnoreMissingData() || !column.get(row).equals(DataType.NULL_VALUE)) {
+                    column.set(row, Double.toString(var.getDistribution().getSample()));
+                }
+            }
+        }
+
+        @Override
+        public DataMaskingFunction clone() {
+            return new DataMaskingFunctionRandomGenerationNumeric(super.isIgnoreMissingData(), var);
         }
     }
     
@@ -244,6 +300,7 @@ public abstract class DataMaskingFunction implements Serializable {
             }
             return new String(buffer);
         }
+    }
 
      /**
      * Generates a random permutation column's rows

@@ -92,5 +92,9 @@ public class ContinuousDistribution extends Distribution<Double> {
     public double getValue(Double value) {
         return distribution.density(value);
     }
+    
+    public double getSample() {
+    		return distribution.sample();
+    }
 
 }

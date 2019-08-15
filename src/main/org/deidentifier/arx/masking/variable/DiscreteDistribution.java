@@ -80,5 +80,11 @@ public class DiscreteDistribution extends Distribution<Integer> {
     public double getValue(Integer value) {
         return distribution.probability(value);
     }
+    
+    public double getSample() {
+    		return distribution.sample();
+    }
+   
+    
 
 }

@@ -66,4 +66,9 @@ public abstract class Distribution<T> {
      */
     public abstract double getValue(T value);
 
+    /**
+     * Returns a value sampled by the distribution
+     * @return
+     */
+    public abstract double getSample();
 }
