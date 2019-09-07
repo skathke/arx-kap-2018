@@ -31,8 +31,10 @@ import org.deidentifier.arx.gui.resources.Resources;
 import org.deidentifier.arx.gui.view.SWTUtil;
 import org.deidentifier.arx.gui.view.def.IView;
 import org.deidentifier.arx.gui.view.impl.common.ComponentTitledFolder;
+import org.deidentifier.arx.masking.DataMaskingFunction;
 import org.deidentifier.arx.masking.MaskingConfiguration;
 import org.deidentifier.arx.masking.MaskingType;
+import org.deidentifier.arx.masking.variable.RandomVariable;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -353,6 +355,19 @@ public class ViewAttributeConfiguration implements IView {
                 }
 
             }
+        }
+ 
+        if (event.part == ModelPart.MASKING_CONFIGURATION) {
+        	//Get correct Masking Function
+        	if (MaskingConfiguration.getMaskingType(model.getSelectedAttribute()).equals(MaskingType.NOISE_ADDITION_MASKING) && event.data != null) {
+        		model.getInputConfig().getInput().getDefinition().setMaskingFunction(model.getSelectedAttribute(), AttributeType.MaskingFunction.applyNoise(model.getInputConfig().getMicroAggregationIgnoreMissingData(model.getSelectedAttribute()), (RandomVariable) event.data));
+        	} else if (MaskingConfiguration.getMaskingType(model.getSelectedAttribute()).equals(MaskingType.RANDOM_GENERATION_MASKING) && event.data != null) {
+        		model.getInputConfig().getInput().getDefinition().setMaskingFunction(model.getSelectedAttribute(), AttributeType.MaskingFunction.generateNumericValues(model.getInputConfig().getMicroAggregationIgnoreMissingData(model.getSelectedAttribute()), (RandomVariable) event.data));
+        	} else if (MaskingConfiguration.getMaskingType(model.getSelectedAttribute()).equals(MaskingType.PSEUDONYMIZATION_MASKING)) {
+        		model.getInputConfig().getInput().getDefinition().setMaskingFunction(model.getSelectedAttribute(), AttributeType.MaskingFunction.createRandomAlphanumericString(model.getInputConfig().getMicroAggregationIgnoreMissingData(model.getSelectedAttribute()), (int) event.data));
+        	} else if (MaskingConfiguration.getMaskingType(model.getSelectedAttribute()).equals(MaskingType.RANDOM_SHUFFLING_MASKING)) {
+        		model.getInputConfig().getInput().getDefinition().setMaskingFunction(model.getSelectedAttribute(), AttributeType.MaskingFunction.randomShuffling(model.getInputConfig().getMicroAggregationIgnoreMissingData(model.getSelectedAttribute())));
+        	}
         }
 
         // Reenable redrawing

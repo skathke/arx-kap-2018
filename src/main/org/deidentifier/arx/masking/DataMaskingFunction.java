@@ -16,6 +16,7 @@
  */
 package org.deidentifier.arx.masking;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -119,13 +120,17 @@ public abstract class DataMaskingFunction implements Serializable {
         }
 
         @Override
-        public void apply(DataColumn column) throws NumberFormatException {
+        public void apply(DataColumn column) throws IOException {
 
             //Check for Non-numerical values
             for (int row = 0; row < column.getNumRows(); row++) {
-            			if (!((column.get(row).equals(DataType.DECIMAL) || column.get(row).equals(DataType.INTEGER) && 
-            					!column.get(row).equals(DataType.NULL_VALUE))))
-            				throw new NumberFormatException();
+            			if (!column.get(row).equals(DataType.NULL_VALUE))
+            				try {
+            					Double.parseDouble(column.get(row));
+            				} catch (Exception e) {
+            					throw new IOException("");
+            				}
+            				
             }
             
             // Mask
@@ -511,8 +516,9 @@ public abstract class DataMaskingFunction implements Serializable {
     /**
      * Applies the function to the given column
      * @param column
+     * @throws IOException 
      */
-    public abstract void apply(DataColumn column);
+    public abstract void apply(DataColumn column) throws IOException;
 
     /** Clone*/
     public abstract DataMaskingFunction clone();

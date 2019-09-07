@@ -43,6 +43,8 @@ import org.deidentifier.arx.io.IOUtil;
 import org.deidentifier.arx.masking.DataMaskingFunction;
 import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionRandomAlphanumericString;
 import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionNoiseAddition;
+import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionRandomShuffling;
+import org.deidentifier.arx.masking.DataMaskingFunction.DataMaskingFunctionRandomGenerationNumeric;
 import org.deidentifier.arx.masking.variable.RandomVariable;
 import org.deidentifier.arx.masking.DataMaskingFunction.PermutationFunctionColumns;
 import org.deidentifier.arx.masking.DataMaskingFunction.PermutationFunctionColumns.PermutationType;
@@ -895,8 +897,34 @@ public class AttributeType implements Serializable, Cloneable { // NO_UCD
                                            DataScale.NOMINAL, "Random alphanumeric string");
             }
             
+        /**
+         * Creates a Noise Addition Masking Function
+         * @param ignoreMissingData
+         * @param r
+         * @return
+         */
         public static MaskingFunction applyNoise(boolean ignoreMissingData, RandomVariable r) {
         	return new MaskingFunction(new DataMaskingFunctionNoiseAddition(ignoreMissingData, r), DataScale.NOMINAL, "Noise Addition");
+        }
+        
+        /**
+         * Creates a Random Generation Masking Function
+         * @param ignoreMissingData
+         * @param r
+         * @return
+         */
+        public static MaskingFunction generateNumericValues(boolean ignoreMissingData, RandomVariable r) {
+        	return new MaskingFunction(new DataMaskingFunctionRandomGenerationNumeric(ignoreMissingData, r), DataScale.NOMINAL, "Random Generation");
+        }
+        
+        /**
+         * Creates a Noise Addition Masking Function
+         * @param ignoreMissingData
+         * @param r
+         * @return
+         */
+        public static MaskingFunction randomShuffling(boolean ignoreMissingData) {
+        	return new MaskingFunction(new DataMaskingFunctionRandomShuffling(ignoreMissingData), DataScale.NOMINAL, "Random Shuffling");
         }
 
         /**
@@ -919,6 +947,7 @@ public class AttributeType implements Serializable, Cloneable { // NO_UCD
         			                       DataScale.NOMINAL, "Permutation Columns");
             }
     
+            //TODO
         
         /** The actual masking function */
         private final DataMaskingFunction function;
@@ -976,8 +1005,9 @@ public class AttributeType implements Serializable, Cloneable { // NO_UCD
         /** 
          * Applies the function
          * @param column
+         * @throws IOException 
          */
-        protected void apply(DataColumn column) {
+        protected void apply(DataColumn column) throws IOException {
             function.apply(column);
         }
     }

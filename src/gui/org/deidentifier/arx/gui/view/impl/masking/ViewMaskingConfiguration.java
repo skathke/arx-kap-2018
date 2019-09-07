@@ -29,6 +29,7 @@ import org.deidentifier.arx.gui.view.SWTUtil;
 import org.deidentifier.arx.gui.view.def.IView;
 import org.deidentifier.arx.gui.view.impl.common.ComponentMultiStack;
 import org.deidentifier.arx.gui.view.impl.common.ComponentTitledFolder;
+import org.deidentifier.arx.gui.view.impl.menu.DialogError;
 import org.deidentifier.arx.masking.MaskingConfiguration;
 import org.deidentifier.arx.masking.MaskingType;
 import org.deidentifier.arx.masking.variable.RandomVariable;
@@ -44,6 +45,8 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
 
 /**
  * View providing masking configuration.
@@ -149,7 +152,7 @@ public class ViewMaskingConfiguration implements IView {
                     for (String att : identifyingAttributes) {
                         if (att.equals(attribute)) {
                             MaskingType maskingType = COMBO1_TYPES[cmbMasking.getSelectionIndex()];
-                            actionMaskingTypeChanged(attribute, maskingType);
+                            actionMaskingTypeChanged(attribute, maskingType, false);
                             refreshLayers(cmbMasking.getSelectionIndex());
                             identified = true;
                             cmbMasking.select(cmbMasking.getSelectionIndex());
@@ -248,8 +251,9 @@ public class ViewMaskingConfiguration implements IView {
             @Override
             public void widgetSelected(final SelectionEvent arg0) {
                 if ((cmbDistribution.getSelectionIndex() != -1) && (attribute != null)) {
-                    MaskingConfiguration.addDistribution(attribute, cmbDistribution.getSelectionIndex());
+                    MaskingConfiguration.addDistribution(attribute, cmbDistribution.getSelectionIndex());                   
                 }
+                actionMaskingTypeChanged(attribute, MaskingConfiguration.getMaskingType(attribute), true);
             }
         });
 
@@ -264,12 +268,13 @@ public class ViewMaskingConfiguration implements IView {
      * 
      * @param attribute
      * @param maskingType
+     * @param distrOnly
      */
-    private void actionMaskingTypeChanged(String attribute, MaskingType maskingType) {
+    private void actionMaskingTypeChanged(String attribute, MaskingType maskingType, boolean distrOnly) {
         if (maskingType != null)
             MaskingConfiguration.addMasking(attribute, maskingType);
         // sets the ComboBox to the appropriate Distribution, only if set to RandomGeneration or NoiseAddition
-        if (maskingType == MaskingType.RANDOM_GENERATION_MASKING || maskingType == MaskingType.NOISE_ADDITION_MASKING) {
+        if (!distrOnly && (maskingType == MaskingType.RANDOM_GENERATION_MASKING || maskingType == MaskingType.NOISE_ADDITION_MASKING)) {
             int index = MaskingConfiguration.getDistributionIndex(attribute);
             if (index <= cmbDistribution.getItemCount() - 1)
                 cmbDistribution.select(index);
@@ -289,8 +294,31 @@ public class ViewMaskingConfiguration implements IView {
                 textField.setToolTipText("15"); //$NON-NLS-1$
             }
         }
-        		
-        controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, null));
+        
+        if (maskingType == MaskingType.NOISE_ADDITION_MASKING) {
+        	if (cmbDistribution.getSelectionIndex() != 0) { //Not Identity
+        		RandomVariable var = controller.getModel().getMaskingModel().getRandomVariables().get(cmbDistribution.getSelectionIndex() - 1);
+        		controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, var));
+        	} else {
+        		controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, null));
+        	}
+        } else if (maskingType == MaskingType.RANDOM_GENERATION_MASKING){
+        	if (cmbDistribution.getSelectionIndex() != 0) { //Not Identity
+        		RandomVariable var = controller.getModel().getMaskingModel().getRandomVariables().get(cmbDistribution.getSelectionIndex() - 1);
+        		controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, var));
+        	} else {
+        		controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, null));
+        	}
+        	
+        } else if (maskingType == MaskingType.PSEUDONYMIZATION_MASKING){
+        	try {
+        		controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, Integer.parseInt(textField.getText())));
+        	} catch (ParseException e){
+        		DialogError d = new DialogError(controller.getResources().getShell(), controller, "Invalid string length", "Please enter an integer for the string length");
+        	}
+        } else if (maskingType == MaskingType.RANDOM_SHUFFLING_MASKING || maskingType == MaskingType.SUPPRESSED){
+        	controller.update(new ModelEvent(this, ModelPart.MASKING_CONFIGURATION, null));
+        }
     }
     
     
@@ -352,14 +380,14 @@ public class ViewMaskingConfiguration implements IView {
             	cmbMasking.setEnabled(false);
             	cmbMasking.select(0);
             	stack.setLayer(0);
-            	actionMaskingTypeChanged(attribute, MaskingType.SUPPRESSED);
+            	actionMaskingTypeChanged(attribute, MaskingType.SUPPRESSED, false);
             	}
             else
             	cmbMasking.setEnabled(true);
             	if (!controller.getModel().getInputDefinition().getIdentifyingAttributes().contains("attribute")) {
             		cmbMasking.select(0);
                 	stack.setLayer(0);
-                	actionMaskingTypeChanged(attribute, MaskingType.SUPPRESSED);
+                	actionMaskingTypeChanged(attribute, MaskingType.SUPPRESSED, false);
             	}
             // TODO disable/hide masking configuration when no attribute is selected in the
             // attribute configuration table (currently selected attribute is not identifying)

@@ -750,8 +750,9 @@ public class ARXAnonymizer { // NO_UCD
      * @param manager
      * @param definition
      * @return
+     * @throws IOException 
      */
-    private org.deidentifier.arx.framework.data.Data mask(DataManager manager, DataDefinition definition) {
+    private org.deidentifier.arx.framework.data.Data mask(DataManager manager, DataDefinition definition) throws IOException {
         DataColumn[] columns = manager.getDataMasking();
         for (DataColumn column : columns) {
             definition.getMaskingFunction(column.getAttribute()).apply(column);
